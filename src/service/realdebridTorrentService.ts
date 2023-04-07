@@ -28,9 +28,14 @@ export class RealDebridTorrentService {
         }
         return queueFunction(this.torrentFile).then(id => {
             this.id = id;
-            return this.realdebridClient.selectTorrentFiles(id).catch(() => {
-                this.isValid = false;
-                console.log(`[+] error select files for '${this.torrentFile}.`);
+            return this.realdebridClient.getTorrentInfo(id).then(torrentInfo => {
+                if (torrentInfo.status === 'waiting_files_selection') {
+                    return this.realdebridClient.selectTorrentFiles(id).catch(() => {
+                        this.isValid = false;
+                        console.log(`[+] error select files for '${this.torrentFile}.`);
+                        return Promise.resolve(null);
+                    });
+                }
                 return Promise.resolve(null);
             });
         }).catch((err) => {
