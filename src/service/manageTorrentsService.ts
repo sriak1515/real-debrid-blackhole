@@ -14,8 +14,10 @@ export class ManageTorrentService {
 
     public async addTorrent(torrentFile: string): Promise<string | null> {
         const torrent = new RealDebridTorrentService(this.realdebridClient, this.aria2Client, torrentFile);
-        this.currentTorrents.push(torrent);
-        return torrent.queue();
+        return torrent.queue().then((res) => {
+            this.currentTorrents.push(torrent);
+            return res;
+        });
     }
 
     public async update(): Promise<null> {
@@ -27,7 +29,6 @@ export class ManageTorrentService {
                 return Promise.resolve(null);
             });
     }
-
 
     private removeInvalidTorrents() {
         this.currentTorrents.forEach((torrent, index) => {
