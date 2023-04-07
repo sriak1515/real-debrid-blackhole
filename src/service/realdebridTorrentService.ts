@@ -27,12 +27,14 @@ export class RealDebridTorrentService {
             return Promise.resolve(null);
         }
         return queueFunction(this.torrentFile).then(id => {
+            console.log(`[+] queued '${this.torrentFile}'.`)
             this.id = id;
             return this.realdebridClient.getTorrentInfo(id).then(torrentInfo => {
                 if (torrentInfo.status === 'waiting_files_selection') {
+                    console.log(`[+] selecting files for '${this.torrentFile}'.`)
                     return this.realdebridClient.selectTorrentFiles(id).catch(() => {
-                        this.isValid = false;
                         console.log(`[+] error select files for '${this.torrentFile}.`);
+                        this.isValid = false;
                         return Promise.resolve(null);
                     });
                 }
@@ -40,8 +42,8 @@ export class RealDebridTorrentService {
             });
         }).catch((err) => {
             console.debug(err);
-            this.isValid = false;
             console.log(`[+] error queuing '${this.torrentFile}.`);
+            this.isValid = false;
             return Promise.resolve(null);
         });
     }
@@ -61,6 +63,7 @@ export class RealDebridTorrentService {
                 return Promise.resolve(false);
             }
             if (this.isDoneStatus(torrentInfo.status)) {
+                console.log(`[+] '${this.torrentFile} has finished torrent download, queuing links `);
                 const promises = torrentInfo.links.map(link => this.unrestrictAndDownload(link));
                 this.isValid = false;
                 return Promise.all(promises).then(() => Promise.resolve(false)).catch(() => Promise.resolve(false));
@@ -85,13 +88,13 @@ export class RealDebridTorrentService {
         return this.realdebridClient.unrestrictLink(link).then((unrestrictResponse) => {
             console.log(`[+] Passing link to aria2 for '${this.torrentFile}'`);
             return this.aria2Client.addUri(unrestrictResponse.download).catch(() => {
-                this.isValid = false;
                 console.log(`[+] error passing link '${unrestrictResponse.download}' to aria2 for '${this.torrentFile}'`);
+                this.isValid = false;
                 return Promise.resolve(null);
             });
         }).catch(() => {
-            this.isValid = false;
             console.log(`[+] error unrestricting link '${link}' for '${this.torrentFile}'`);
+            this.isValid = false;
             return Promise.resolve(null);
         });
     }
