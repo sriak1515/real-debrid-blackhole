@@ -106,6 +106,6 @@ export class RealDebridTorrentService {
     }
 
     private isDoneStatus(state: TorrentStatus): boolean {
-        return (state === "downloading" || state === "downloaded");
+        return (state === "downloaded");
     }
 }
